@@ -50,6 +50,7 @@ int main(int argc, char const *argv[])
 					NSLog(@"Host is found and user: %@ logged in. Exiting.", currentUser);
 					break;
 				} else {
+					// keep running if nobody is logged in, to ensure host remains active on the login screen
 					// NSLog(@"Host is found, but no user logged. Waiting.");
 				}
 			} else {

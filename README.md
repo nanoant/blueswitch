@@ -3,33 +3,62 @@ blueswitch
 
 ## Description
 
-This is a tiny utility plus a launchd daemon definition to ensure desired Bluetooth dongle (aka HCI host controller) remains active, e.g. after Mac reboot. Bluetooth Explorer (by Apple) HCI Controller Selector function was so far the only to switch from built-in device to USB dongle. This selection is however NOT retained after a restart.
+This is a tiny utility plus a launchd daemon definition to ensure desired Bluetooth dongle (aka HCI host controller) remains active in *macOS*, e.g. after *Mac* reboot.
 
-Many sites suggest using `sudo nvram bluetoothHostControllerSwitchBehavior=always` to ensure that USB dongle is preferred, maybe it once worked in macOS (or Mac OS X), but this DOES NOT work for me as for Mojave 10.14.6.
+[bluetooth]: https://developer.apple.com/bluetooth/
+
+[Bluetooth Explorer][bluetooth] from Apple Developer Tools contains HCI Controller Selector function that was so far the only way to switch from built-in Bluetooth host device to plugged in USB dongle. This selection is however NOT retained after a restart.
+
+Many sites suggest using
+
+    sudo nvram bluetoothHostControllerSwitchBehavior=always
+
+to ensure that USB dongle is preferred and selected after *macOS* reboot, but this DOES NOT work for me as for Mojave 10.14.6. Maybe it once worked in macOS (or Mac OS X), but the functionality was silently removed or altered.
 
 ## Story
 
 [macforums]: https://forums.macrumors.com/threads/mac-mini-2018-bluetooth-issues.2157086/
 
-I have created this little tool to mitigate mediocre built-in Bluetooth reception as reported by many other users at [MacForums][macforums]. This tool uses some private `IOBluetooth` framework `BluetoothHCISwitchToSelectedHostController` function, the same as one used by Bluetooth Explorer utility, to switch to desired host controller.
+I have created this little tool to mitigate mediocre built-in Bluetooth radio reception as reported by many other users at [MacForums][macforums]. This tool uses private `IOBluetooth` framework `BluetoothHCISwitchToSelectedHostController` function - same way as Bluetooth Explorer does to switch to desired host controller.
 
-I was frustrated by stuttering and jumping of my Magic Mouse cursor, numerous disconnections of the mouse and keyboard of new MacMini 2018. It took me a while to find out that MacMini Bluetooth hardware was flawed - after I have replaced Magic Mouse batteries, cleaned the contacts, almost bought new Magic Mouse. Luckily I found this [MacForums][macforums] thread.
+I was frustrated by stuttering and jumpy behavior Magic Mouse connected to my new *MacMini* 2018. I have also experienced numerous disconnects of the mouse and keyboard. It took me a while to find out that *MacMini* Bluetooth hardware was to blame. After I have replaced Magic Mouse batteries, cleaned the contacts, almost bought new Magic Mouse, I found this [MacForums][macforums] thread.
 
-Of course putting Bluetooth dongle into MacMini USB and expecting it to work would be too easy. Apple provided only cumbersome way to make it active and no freaking way to make it remain active after the reboot.
+Of course putting Bluetooth dongle into MacMini USB and expecting it to work would be too easy. Apple provided only one cumbersome way to make the dongle active using private API and no obvious way to make it remain active after the reboot.
 
-Was this all experience fun? Nope!
+Was this all experience fun? Nope! But this maybe spares you some dose of frustration.
 
 ## Installation
 
-### Compiling:
+### Compiling
 
     cc -Wall -o blueswitch blueswitch.m -framework Foundation -framework IOBluetooth -framework SystemConfiguration
 
-### Installing
+### Installing system wide
 
-Make sure you update `com.nanoant.blueutil.plist` with your Dongle's location ID and MAC address. This can be looked up in Bluetooth Explorer.
+You may simple copy the tool into your `/usr/local/bin` by:
 
-### Checking
+    sudo cp blueswitch /usr/local/bin/
+
+Then this tool can be used as a simple command line utility, e.g.:
+
+    blueswitch 12300000 00-11-22-33-44-55
+
+This will switch to location `12300000` and wait to ensure current Bluetooth host's MAC address is `00-11-22-33-44-55`. If not it will initiate switch and wait again.
+
+### Installing launchd daemon
+
+This tool can be also ran after restart as a *launchd* daemon. To do so, first make sure you update `com.nanoant.blueutil.plist` with your Dongle's location ID and MAC address. These values can be looked up in [Bluetooth Explorer][bluetooth].
+
+Then install and enable the daemon by:
+
+    sudo cp com.nanoant.blueutil.plist /Library/LaunchDaemons/
+    sudo launchctl load -w /Library/LaunchDaemons/com.nanoant.blueutil.plist
+
+#### NOTE
+
+`blueswitch` contains the check if nobody is logged in (via `SCDynamicStoreCopyConsoleUser`) and in such case it will remain running even when desired host becomes active. This is to mitigate situation that *macOS* switches back (2nd time) to built-in radio after the reboot, as that was observed on my computer. However, it will quit once someone is logged in and desired host is active.
+
+### Checking logs
 
     log show --info --debug --predicate 'senderImagePath endswith "blueswitch"'
 
@@ -64,4 +93,3 @@ Released under MIT license.
 > LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 > SOFTWARE.
->
