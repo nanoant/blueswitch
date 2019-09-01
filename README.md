@@ -5,9 +5,9 @@ blueswitch
 
 This is a tiny utility plus a launchd daemon definition to ensure desired Bluetooth dongle (aka HCI host controller) remains active in *macOS*, e.g. after *Mac* reboot.
 
-[bluetooth]: https://developer.apple.com/bluetooth/
+[apple]: https://developer.apple.com/bluetooth/
 
-[Bluetooth Explorer][bluetooth] from Apple Developer Tools contains HCI Controller Selector function that was so far the only way to switch from built-in Bluetooth host device to plugged in USB dongle. This selection is however NOT retained after a restart.
+[Bluetooth Explorer][apple] from Apple Developer Tools contains HCI Controller Selector function that was so far the only way to switch from built-in Bluetooth host device to plugged in USB dongle. This selection is however NOT retained after a restart.
 
 Many sites suggest using
 
@@ -29,45 +29,40 @@ Was this all experience fun? Nope! But this maybe spares you some dose of frustr
 
 ## Installation
 
-### Compiling
+1. Update `com.nanoant.blueutil.plist` with your Dongle's location ID and MAC address. This can be looked up in [Bluetooth Explorer][apple].
 
-    cc -Wall -o blueswitch blueswitch.m -framework Foundation -framework IOBluetooth -framework SystemConfiguration
+2. Open terminal in the project folder and type:
 
-### Installing system wide
+   ~~~
+   make
+   ~~~
 
-You may simple copy the tool into your `/usr/local/bin` by:
+   You will be asked for password by `sudo` too install binary into `/usr/local/bin` and service definition into `/Library/LaunchDaemons`.
 
-    sudo cp blueswitch /usr/local/bin/
+3. Verify the service was run by launchd:
 
-Then this tool can be used as a simple command line utility, e.g.:
+   ~~~
+   log show --info --debug --predicate 'senderImagePath endswith "blueswitch"'
+   ~~~
+
+   This should show something like this after reboot:
+   ~~~
+   blueswitch: Switching to location: 12300000 waiting for address: 00-11-22-33-44-55
+   blueswitch: Current host has address: aa-bb-cc-dd-ee-ff
+   blueswitch: Host is found and user: me logged in. Exiting.
+   ~~~
+
+   Repeat this after reboot if your dongle was not picked up after the reboot.
+
+### Notes
+
+This tool can be used as a simple command line utility, e.g.:
 
     blueswitch 12300000 00-11-22-33-44-55
 
 This will switch to location `12300000` and wait to ensure current Bluetooth host's MAC address is `00-11-22-33-44-55`. If not it will initiate switch and wait again.
 
-### Installing launchd daemon
-
-This tool can be also ran after restart as a *launchd* daemon. To do so, first make sure you update `com.nanoant.blueutil.plist` with your Dongle's location ID and MAC address. These values can be looked up in [Bluetooth Explorer][bluetooth].
-
-Then install and enable the daemon by:
-
-    sudo cp com.nanoant.blueutil.plist /Library/LaunchDaemons/
-    sudo launchctl load -w /Library/LaunchDaemons/com.nanoant.blueutil.plist
-
-#### NOTE
-
 `blueswitch` contains the check if nobody is logged in (via `SCDynamicStoreCopyConsoleUser`) and in such case it will remain running even when desired host becomes active. This is to mitigate situation that *macOS* switches back (2nd time) to built-in radio after the reboot, as that was observed on my computer. However, it will quit once someone is logged in and desired host is active.
-
-### Checking logs
-
-    log show --info --debug --predicate 'senderImagePath endswith "blueswitch"'
-
-This should show something like this after reboot:
-~~~
-blueswitch: Switching to location: 12300000 waiting for address: 00-11-22-33-44-55
-blueswitch: Current host has address: aa-bb-cc-dd-ee-ff
-blueswitch: Host is found and user: me logged in. Exiting.
-~~~
 
 ## License
 
