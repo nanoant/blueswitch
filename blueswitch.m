@@ -43,18 +43,21 @@ int main(int argc, char const *argv[])
 	while(TRUE) { @autoreleasepool {
 		IOBluetoothHostController *host = [IOBluetoothHostController defaultController];
 		if (host) {
+			NSString *hostClass = NSStringFromClass([host class]);
 			NSString *hostAddr = [host addressAsString];
-			if ([hostAddr isEqualToString:addr]) {
+			if (!hostAddr) {
+				NSLog(@"Current host %@ has no address.", hostClass);
+			} else if ([hostAddr isEqualToString:addr]) {
 				NSString *currentUser = getConsoleUser();
 				if (currentUser && [currentUser length]) {
-					NSLog(@"Host is found and user: %@ logged in. Exiting.", currentUser);
+					NSLog(@"Host %@ is found and user: %@ logged in. Exiting.", hostClass, currentUser);
 					break;
 				} else {
 					// keep running if nobody is logged in, to ensure host remains active on the login screen
 					// NSLog(@"Host is found, but no user logged. Waiting.");
 				}
 			} else {
-				NSLog(@"Current host has address: %@", hostAddr);
+				NSLog(@"Current host %@ has address: %@", hostClass, hostAddr);
 			}
 		} else {
 			NSLog(@"No host found.");

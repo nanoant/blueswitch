@@ -42,7 +42,7 @@ Was this all experience fun? Nope! But this maybe spares you some dose of frustr
 3. Verify the service was run by launchd:
 
    ~~~
-   log show --info --debug --predicate 'senderImagePath endswith "blueswitch"'
+   log show --last 5m --info --debug --predicate 'senderImagePath endswith "blueswitch"'
    ~~~
 
    This should show something like this after reboot:
@@ -62,17 +62,9 @@ This tool can be used as a simple command line utility, e.g.:
 
 This will switch to location `12300000` and wait to ensure current Bluetooth host's MAC address is `00-11-22-33-44-55`. If not it will initiate switch and wait again.
 
-Nevertheless, main intention of `blueswitch` is to have it run after the restart and after computer's wake. While launchd runs all daemons after boot, there is no explicit way to have launchd run our daemon after the wake. For this purpose service is told to be run when `displaypolicyd.log` is modified, which seems to happen after the wake (as of *macOS* 10.14.6):
+Nevertheless, main intention of `blueswitch` is to have it run after the restart and after any Bluetooth configuration changes. This is ensured by watching `/Library/Preferences/com.apple.Bluetooth.plist` and running the `blueswitch` when this file is changed.
 
-~~~xml
-    <!-- run it on display wake (which is also computer wake) -->
-    <key>WatchPaths</key>
-    <array>
-        <string>/var/log/displaypolicy/displaypolicyd.log</string>
-    </array>
-~~~
-
-`blueswitch` contains the check if nobody is logged in (via `SCDynamicStoreCopyConsoleUser`) and in such case it will remain running even when desired host becomes active. This is to mitigate situation that *macOS* switches back (2nd time) to built-in radio after the reboot, as that was observed on my computer. However, it will quit once someone is logged in and desired host is active.
+NOTE: `blueswitch` contains additional check if nobody is logged in (via `SCDynamicStoreCopyConsoleUser`) and in such case it will remain running even when desired host becomes active. This is to mitigate situation that *macOS* switches back (2nd time) to built-in radio after the reboot, as that was observed on my computer. However, it will quit once someone is logged in and desired host is active.
 
 ## License
 

@@ -21,10 +21,10 @@
 		<key>SuccessfulExit</key>
 		<false/>
 	</dict>
-	<!-- run it on display wake (which is also computer wake) -->
+	<!-- observe Bluetooth configuration changes -->
 	<key>WatchPaths</key>
 	<array>
-		<string>/var/log/displaypolicy/displaypolicyd.log</string>
+		<string>/Library/Preferences/com.apple.Bluetooth.plist</string>
 	</array>
 </dict>
 </plist>
