@@ -1,6 +1,31 @@
 blueswitch
 ==========
 
+## Disclaimer
+
+[macforums]: https://forums.macrumors.com/threads/mac-mini-2018-bluetooth-issues.2157086/
+
+This code is now obsolete for *Mac Mini* 2018 Bluetooth problem as I finally found the reliable way to disable built-in bluetooth via:
+~~~
+sudo nvram SkipIOBluetoothHostControllerUARTTransport=%01
+~~~
+
+[startech]: https://www.startech.com/Networking-IO/Bluetooth-Telecom/USB-Bluetooth-4-Dongle~USBBT1EDR4
+
+Which together with some USB Bluetooth dongle supported by built-in drivers, e.g. one using *CSR8510 A10* chip such as [StarTech USBBT1EDR4][startech]
+
+Still I leave the project for learning / research purposes.
+
+TL;DR
+
+.
+
+.
+
+.
+
+.
+
 ## Description
 
 This is a tiny utility plus a launchd daemon definition to ensure desired Bluetooth dongle (aka HCI host controller) remains active in *macOS*, e.g. after *Mac* reboot.
